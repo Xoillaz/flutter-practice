@@ -37,18 +37,11 @@ class Word {
 
   factory Word.fromJson(Map<String, dynamic> json) {
     final entries = json['data']['entries'] as List<dynamic>;
-    if (entries.isNotEmpty) {
-      final firstEntry = entries[0];
-      return Word(
-        entry: firstEntry['entry'] ?? 'Unknown',
-        explain: firstEntry['explain'] ?? 'No explanation available',
-      );
-    } else {
-      return const Word(
-        entry: 'Unknown',
-        explain: 'No explanation available',
-      );
-    }
+    final firstEntry = entries[0];
+    return Word(
+      entry: firstEntry['entry'] ?? 'Unknown',
+      explain: firstEntry['explain'] ?? 'No explanation available',
+    );
   }
 }
 
@@ -89,7 +82,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isNarrowScreen = MediaQuery.of(context).size.width < 450;
+    final isNarrowScreen = MediaQuery.of(context).size.width <= 640;
 
     Widget page;
     switch (_selectedIndex) {
@@ -142,7 +135,7 @@ class _MainLayoutState extends State<MainLayout> {
             children: [
               SafeArea(
                 child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
+                  extended: constraints.maxWidth >= 900,
                   destinations: const [
                     NavigationRailDestination(
                       icon: Icon(Icons.search),
@@ -211,8 +204,7 @@ class _WordSearchCardState extends State<WordSearchCard> {
         .get('https://dict.youdao.com/suggest?q=$query&num=1&doctype=json');
 
       if (response.statusCode == 200) {
-        print(response);
-        final data = Word.fromJson(json.decode(response.data));
+        final data = Word.fromJson(response.data);
         result = data;
         context.read<WordSearchState>().addToHistory(data);
       } else {
