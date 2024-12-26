@@ -36,10 +36,19 @@ class Word {
   });
 
   factory Word.fromJson(Map<String, dynamic> json) {
-    return Word(
-      entry: json['entries']['entry'] ?? 'Unknown',
-      explain: json['entries']['explain'] ?? 'No explanation available',
-    );
+    final entries = json['data']['entries'] as List<dynamic>;
+    if (entries.isNotEmpty) {
+      final firstEntry = entries[0];
+      return Word(
+        entry: firstEntry['entry'] ?? 'Unknown',
+        explain: firstEntry['explain'] ?? 'No explanation available',
+      );
+    } else {
+      return const Word(
+        entry: 'Unknown',
+        explain: 'No explanation available',
+      );
+    }
   }
 }
 
@@ -196,6 +205,7 @@ class _WordSearchCardState extends State<WordSearchCard> {
 
     if (query.isEmpty) return;
 
+    Word result;
     try {
       final response = await dio
         .get('https://dict.youdao.com/suggest?q=$query&num=1&doctype=json');
@@ -203,20 +213,22 @@ class _WordSearchCardState extends State<WordSearchCard> {
       if (response.statusCode == 200) {
         print(response);
         final data = Word.fromJson(json.decode(response.data));
-        setState(() => _currentWord = data);
+        result = data;
         context.read<WordSearchState>().addToHistory(data);
       } else {
-        setState(() => _currentWord = Word(
+        result = Word(
           entry: 'Error',
           explain: 'Failed to fetch translation',
-        ));
+        );
       }
     } catch (e) {
-      setState(() => _currentWord = Word(
+      result = Word(
         entry: 'Error',
         explain: e.toString(),
-      ));
+      );
     }
+
+    setState(() => _currentWord = result);
   }
 
   @override
