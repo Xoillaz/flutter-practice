@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'dart:convert';
 
 void main() {
@@ -37,8 +37,8 @@ class Word {
 
   factory Word.fromJson(Map<String, dynamic> json) {
     return Word(
-      entry: json['entry'] ?? 'Unknown',
-      explain: json['explain'] ?? 'No explanation available',
+      entry: json['entries']['entry'] ?? 'Unknown',
+      explain: json['entries']['explain'] ?? 'No explanation available',
     );
   }
 }
@@ -192,15 +192,17 @@ class _WordSearchCardState extends State<WordSearchCard> {
   Word? _currentWord;
 
   Future<void> _searchWord(String query) async {
+    final dio = Dio();
+
     if (query.isEmpty) return;
 
     try {
-      final response = await http.get(
-        Uri.parse('https://dict.youdao.com/suggest?q=$query&num=1&doctype=json'),
-      );
+      final response = await dio
+        .get('https://dict.youdao.com/suggest?q=$query&num=1&doctype=json');
 
       if (response.statusCode == 200) {
-        final data = Word.fromJson(json.decode(response.body)['data']['entries']);
+        print(response);
+        final data = Word.fromJson(json.decode(response.data));
         setState(() => _currentWord = data);
         context.read<WordSearchState>().addToHistory(data);
       } else {
